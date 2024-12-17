@@ -50,7 +50,7 @@ void messageReceived(String &topic, String &payload) {
 
   if (payload == "on") {
     isRunning = true;
-    Serial.println("The washing machine started..");
+    Serial.println("The washing machine is running..");
   } else if (payload == "off") {
     isRunning = false;
     Serial.println("The washing machine stoped.");
@@ -126,8 +126,8 @@ void loop() {
   lastMillis = millis(); // อัปเดตเวลา
 
   if (isRunning) {
-    client.publish("group2.21/status", "The washing machine started..");
-    Serial.println("Status: The washing machine started..");
+    client.publish("group2.21/status", "The washing machine is running...");
+    Serial.println("Status: The washing machine is running...");
   } else {
     client.publish("group2.21/status", "The washing machine stopped.");
     Serial.println("Status: The washing machine stopped.");
