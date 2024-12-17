@@ -93,7 +93,8 @@ void loop() {
   }
 
   // ทำงานเมื่อมอเตอร์กำลังทำงาน
-  unsigned long currentTime = millis();
+  //unsigned long currentTime = millis();
+  unsigned long lastMillis = 0;
 
   if (isPaused) {
     // ช่วงหยุดพัก
@@ -123,15 +124,14 @@ void loop() {
   // not that we don't use delay() because we need to keep calling the client.loop()
   // to keep the connection alive
   if (millis() - lastMillis > 2000) { // ส่งข้อความทุกๆ 2 วินาที
-  lastMillis = millis(); // อัปเดตเวลา
-
-  if (isRunning) {
-    client.publish("group2.21/status", "The washing machine is running...");
-    Serial.println("Status: The washing machine is running...");
-  } else {
-    client.publish("group2.21/status", "The washing machine stopped.");
-    Serial.println("Status: The washing machine stopped.");
-  }
+    lastMillis = millis(); // อัปเดตเวลา
+    if (isRunning) {
+      client.publish(mqtt_topic, "The washing machine is running...");
+      Serial.println("Status: The washing machine is running...");
+    } else {
+      client.publish(mqtt_topic, "The washing machine stopped.");
+      Serial.println("Status: The washing machine stopped.");
+    }
 }
 
 }
