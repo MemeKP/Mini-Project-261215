@@ -47,12 +47,12 @@ void connect() {
 void messageReceived(String &topic, String &payload) {
   Serial.println("Received: " + topic + " - " + payload);
 
-  if (payload == "start") {
+  if (payload == "on") {
     isRunning = true;
-    Serial.println("Motor started via MQTT.");
+    Serial.println("The washing machine started..");
   } else if (payload == "stop") {
-    isRunning = false;
-    Serial.println("Motor stopped via MQTT.");
+    isRunning = off;
+    Serial.println("The washing machine stoped.");
   }
 }
 
