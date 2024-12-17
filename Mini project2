@@ -12,6 +12,7 @@ const int pauseInterval = 500;     // เวลา 0.5 วินาทีสำ�
 bool clockwise = true;             // ทิศทางเริ่มต้น: ตามเข็ม
 bool isPaused = false;             // สถานะหยุดพัก
 bool isRunning = false;            // สถานะการทำงานของมอเตอร์
+unsigned long lastMillis = 0; // ตัวแปรสำหรับเก็บเวลาในการ Publish
 
 // WiFi และ MQTT Config
 const char ssid[] = "nutty";
@@ -50,8 +51,8 @@ void messageReceived(String &topic, String &payload) {
   if (payload == "on") {
     isRunning = true;
     Serial.println("The washing machine started..");
-  } else if (payload == "stop") {
-    isRunning = off;
+  } else if (payload == "off") {
+    isRunning = false;
     Serial.println("The washing machine stoped.");
   }
 }
@@ -118,4 +119,19 @@ void loop() {
       }
     }
   }
+  // publish a message roughly every second if on show The washing machine started.. if off show The washing machine stoped
+  // not that we don't use delay() because we need to keep calling the client.loop()
+  // to keep the connection alive
+  if (millis() - lastMillis > 2000) { // ส่งข้อความทุกๆ 2 วินาที
+  lastMillis = millis(); // อัปเดตเวลา
+
+  if (isRunning) {
+    client.publish("group2.21/status", "The washing machine started..");
+    Serial.println("Status: The washing machine started..");
+  } else {
+    client.publish("group2.21/status", "The washing machine stopped.");
+    Serial.println("Status: The washing machine stopped.");
+  }
+}
+
 }
