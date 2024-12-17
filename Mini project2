@@ -1,0 +1,121 @@
+#include <WiFi.h>
+#include <MQTT.h>
+
+// กำหนดพินสำหรับมอเตอร์และ LED
+#define IN1 22        // ขา Input1 ของ L293D
+#define IN2 19        // ขา Input2 ของ L293D
+#define ENABLE1 23    // ขา Enable1 ของ L293D
+
+unsigned long lastActionTime = 0;  // เก็บเวลาสำหรับเปลี่ยนแอ็คชัน
+const int rotationInterval = 2000; // เวลา 2 วินาทีสำหรับหมุนแต่ละทิศทาง
+const int pauseInterval = 500;     // เวลา 0.5 วินาทีสำหรับหยุดพัก
+bool clockwise = true;             // ทิศทางเริ่มต้น: ตามเข็ม
+bool isPaused = false;             // สถานะหยุดพัก
+bool isRunning = false;            // สถานะการทำงานของมอเตอร์
+
+// WiFi และ MQTT Config
+const char ssid[] = "nutty";
+const char pass[] = "12345678";
+const char mqtt_broker[] = "test.mosquitto.org";
+const char mqtt_topic[] = "group2.21/command";
+const char mqtt_client_id[] = "mini_project_group_2.21";
+int MQTT_PORT = 1883;
+
+// ตัวแปร MQTT
+WiFiClient net;
+MQTTClient client;
+
+// ฟังก์ชันเชื่อมต่อ WiFi และ MQTT
+void connect() {
+  Serial.print("Connecting to WiFi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("\nWiFi connected!");
+
+  Serial.print("Connecting to MQTT...");
+  while (!client.connect(mqtt_client_id)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("\nMQTT connected!");
+  client.subscribe(mqtt_topic);
+}
+
+// ฟังก์ชันจัดการข้อความที่ได้รับจาก MQTT
+void messageReceived(String &topic, String &payload) {
+  Serial.println("Received: " + topic + " - " + payload);
+
+  if (payload == "start") {
+    isRunning = true;
+    Serial.println("Motor started via MQTT.");
+  } else if (payload == "stop") {
+    isRunning = false;
+    Serial.println("Motor stopped via MQTT.");
+  }
+}
+
+void setup() {
+  // ตั้งค่าพิน
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(ENABLE1, OUTPUT);
+
+  // เปิดใช้งาน L293D
+  digitalWrite(ENABLE1, HIGH);
+
+  // เริ่มต้น Serial และ WiFi
+  Serial.begin(9600);
+  WiFi.begin(ssid, pass);
+
+  // เริ่มต้น MQTT
+  client.begin(mqtt_broker, MQTT_PORT, net);
+  client.onMessage(messageReceived);
+
+  connect();
+}
+
+void loop() {
+  client.loop();
+  delay(10); // เสถียรภาพของ WiFi และ MQTT
+
+  if (!client.connected()) {
+    connect();
+  }
+
+  // หากมอเตอร์หยุด ให้ปิดทุกพิน
+  if (!isRunning) {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    return;
+  }
+
+  // ทำงานเมื่อมอเตอร์กำลังทำงาน
+  unsigned long currentTime = millis();
+
+  if (isPaused) {
+    // ช่วงหยุดพัก
+    if (currentTime - lastActionTime >= pauseInterval) {
+      isPaused = false;           // สิ้นสุดช่วงหยุดพัก
+      clockwise = !clockwise;     // สลับทิศทาง
+      lastActionTime = currentTime;
+    }
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+  } else {
+    // ช่วงหมุนมอเตอร์
+    if (currentTime - lastActionTime >= rotationInterval) {
+      isPaused = true;            // เริ่มช่วงหยุดพัก
+      lastActionTime = currentTime;
+    } else {
+      if (clockwise) {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+      } else {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+      }
+    }
+  }
+}
