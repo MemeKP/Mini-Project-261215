@@ -1,0 +1,18 @@
+#include <Wire.h>
+#include <LCD_I2C.h>
+
+// Create LCD object with I2C address 0x27 and 16x2 display size
+LCD_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  lcd.begin();         // Initialize the LCD
+  lcd.backlight();     // Turn on the backlight
+  lcd.print("Hello, world!");  // Display text
+
+  lcd.cursor();        // Show the cursor
+   lcd.blink();      // Uncomment to make the cursor blink
+}
+
+void loop() {
+  // Nothing needed here
+}
