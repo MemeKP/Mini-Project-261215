@@ -1,0 +1,49 @@
+#include <Wire.h>
+#include <LCD_I2C.h>
+#include <RTClib.h>
+
+// สร้างวัตถุ LCD และ RTC
+LCD_I2C lcd(0x27, 16, 2);  // I2C Address ของ LCD คือ 0x27
+RTC_DS3231 rtc;            // RTC DS3231
+
+void setup() {
+  // เริ่มต้น LCD
+  lcd.begin();
+  lcd.backlight();
+
+  // เริ่มต้น RTC
+  if (!rtc.begin()) {
+    lcd.print("RTC error!");
+    while (1); // หากโมดูล RTC ไม่ทำงาน ให้หยุดโปรแกรม
+  }
+
+  // ตรวจสอบว่ามีการตั้งค่าเวลาแล้วหรือยัง
+  if (rtc.lostPower()) {
+    lcd.print("Setting time...");
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // ตั้งค่าเวลาจากเวลา Compile
+  }
+}
+
+void loop() {
+  DateTime now = rtc.now(); // รับวันที่และเวลาปัจจุบันจาก RTC
+
+  // แสดงวันที่
+  lcd.setCursor(0, 0); // ตำแหน่งบรรทัดแรก
+  lcd.print("Date: ");
+  lcd.print(now.day());
+  lcd.print('/');
+  lcd.print(now.month());
+  lcd.print('/');
+  lcd.print(now.year());
+
+  // แสดงเวลา
+  lcd.setCursor(0, 1); // ตำแหน่งบรรทัดที่สอง
+  lcd.print("Time: ");
+  lcd.print(now.hour());
+  lcd.print(':');
+  lcd.print(now.minute());
+  lcd.print(':');
+  lcd.print(now.second());
+
+  delay(1000); // หน่วงเวลา 1 วินาที
+}
