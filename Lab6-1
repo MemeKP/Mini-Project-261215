@@ -1,0 +1,31 @@
+#define Button_Pin   35
+#define LED1_Pin     23
+#define LED2_Pin     22  // Add LED2
+
+unsigned long previousMillis = 0;
+const long interval = 1000; // 1 second
+volatile bool led2State = LOW;  // To store LED2 state
+
+void IRAM_ATTR IO_INT_ISR() {
+  led2State = !led2State; // Toggle LED2 state
+}
+
+void setup() {
+  pinMode(LED1_Pin, OUTPUT);
+  pinMode(LED2_Pin, OUTPUT);
+  pinMode(Button_Pin, INPUT_PULLUP);  // Use internal pull-up resistor
+  attachInterrupt(digitalPinToInterrupt(Button_Pin), IO_INT_ISR, FALLING); // Falling edge for better debounce
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  // Blink LED1 every 1 second
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    digitalWrite(LED1_Pin, !digitalRead(LED1_Pin));
+  }
+
+  // Update LED2 state from interrupt
+  digitalWrite(LED2_Pin, led2State);
+}
