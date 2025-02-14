@@ -1,0 +1,49 @@
+#include <ESP32Servo.h>
+
+Servo myservo;
+
+const int servoPin = 18;  // ขาสัญญาณ PWM สำหรับ Servo
+const int buttonPin = 35; // ขาที่ต่อปุ่มกด
+const int ledPin = 16;    // ขาที่ต่อ LED
+
+volatile bool ledState = false;  // สถานะของ LED (เริ่มต้นปิด)
+volatile bool servoActivated = false; // ใช้เช็คว่า Servo ทำงานไปแล้วหรือยัง
+
+void IRAM_ATTR changeState() {  
+  ledState = !ledState; // Toggle สถานะ LED
+  servoActivated = false; // รีเซ็ตค่า เพื่อให้ Servo ทำงานได้อีกครั้ง
+}
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), changeState, FALLING);
+
+  myservo.attach(servoPin);
+  myservo.write(0); // ตั้งค่าเริ่มต้นของ Servo
+}
+
+void loop() {
+  digitalWrite(ledPin, ledState); // อัปเดตสถานะ LED ตาม `ledState`
+
+  // ถ้า LED ติด และ Servo ยังไม่ทำงาน → ให้ Servo ขยับ
+  if (ledState && !servoActivated) {
+    moveServo();
+    servoActivated = true; // บันทึกว่า Servo ทำงานแล้ว
+  }
+}
+
+// ฟังก์ชันให้ Servo เคลื่อนที่มาปิดสวิตช์แล้วกลับไปที่เดิม
+void moveServo() {
+  for (int pos = 0; pos <= 120; pos += 2) {
+    myservo.write(pos);
+    delay(10);
+  }
+
+  delay(500); // รอให้ปิดปุ่ม
+
+  for (int pos = 120; pos >= 0; pos -= 2) {
+    myservo.write(pos);
+    delay(10);
+  }
+}
