@@ -1,0 +1,61 @@
+#define SERVO_PIN 18    // ขาที่ใช้ควบคุม Servo
+#define BUTTON_PIN 35   // ขาที่ใช้ต่อปุ่มกด
+#define LED_PIN 16      // ขาที่ใช้ต่อ LED
+
+const int PWM_FREQ = 50;      // ความถี่ 50Hz (คาบ 20ms)
+const int PWM_RES = 10;       // ความละเอียด 10-bit (1024 ระดับ)
+
+// ค่าความกว้างของ Pulse (10-bit PWM) ตามองศา
+const int MIN_PULSE = 51;    // 1ms = 51 (0 องศา)
+const int MID_PULSE = 77;    // 1.5ms = 77 (90 องศา)
+const int MAX_PULSE = 102;   // 2ms = 102 (180 องศา)
+
+bool ledState = false;
+bool lastButtonState = LOW;
+bool servoActivated = false;
+
+void setup() {
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(LED_PIN, OUTPUT);
+
+    // ตั้งค่า PWM สำหรับ Servo
+    ledcAttach(SERVO_PIN, PWM_FREQ, PWM_RES);
+    
+    // ตั้ง Servo ไว้ที่ตำแหน่งเริ่มต้น (0 องศา)
+    ledcWrite(SERVO_PIN, MIN_PULSE);
+}
+
+void loop() {
+    bool buttonState = digitalRead(BUTTON_PIN);
+
+    // ตรวจจับการกดปุ่ม (ขอบขาลง)
+    if (buttonState == LOW && lastButtonState == HIGH) {
+        delay(50); // debounce
+        ledState = !ledState;
+        digitalWrite(LED_PIN, ledState);
+        servoActivated = false; // รีเซ็ตสถานะ Servo
+    }
+
+    // ถ้า LED ติด และ Servo ยังไม่ทำงาน → ให้ Servo หมุน
+    if (ledState && !servoActivated) {
+        moveServo();
+        servoActivated = true;
+    }
+
+    lastButtonState = buttonState;
+}
+
+// ฟังก์ชันให้ Servo เคลื่อนที่จาก 0 → 90 → 180 องศา และกลับมา 0
+void moveServo() {
+    ledcWrite(SERVO_PIN, MIN_PULSE); // 0 องศา
+    delay(500);
+
+    ledcWrite(SERVO_PIN, MID_PULSE); // 90 องศา
+    delay(500);
+
+    ledcWrite(SERVO_PIN, MAX_PULSE); // 180 องศา
+    delay(500);
+
+    ledcWrite(SERVO_PIN, MIN_PULSE); // กลับมา 0 องศา
+    delay(500);
+}
