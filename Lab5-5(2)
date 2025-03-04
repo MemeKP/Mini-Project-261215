@@ -1,0 +1,21 @@
+#include <Wire.h>
+#include <LCD_I2C.h>
+
+#define SDA_PIN  18  // กำหนดขา SDA ใหม่ เช่น GPIO4
+#define SCL_PIN  19  // กำหนดขา SCL ใหม่ เช่น GPIO5
+
+// Create LCD object with I2C address 0x27 and 16x2 display size
+LCD_I2C lcd(0x27, 16, 2);
+
+void setup() {
+    Wire.begin(SDA_PIN, SCL_PIN);  // เริ่มต้น I2C บนขาใหม่ที่กำหนด
+    lcd.begin();         // Initialize the LCD
+    lcd.backlight();     // Turn on the backlight
+    lcd.print("Hello, world!");  // Display text
+    lcd.cursor();        // Show the cursor
+    // lcd.blink();      // cursor blink
+}
+
+void loop() {
+  // Nothing needed here
+}
