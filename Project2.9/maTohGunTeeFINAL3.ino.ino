@@ -17,7 +17,7 @@
 #define SCL_PIN  17  // กำหนดขา SCL ใหม่ เช่น GPIO5
 
 /* ขอบเขตค่าขั้นต่ำที่ยอมรับว่าเป็นสีจริง ๆ */
-#define COLOR_THRESHOLD 220  
+#define COLOR_THRESHOLD 210  
 
 /* ขอบเขตของสีจากการ Calibration */
 int R_Min = 5,  R_Max = 380;  
